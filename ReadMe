@@ -1,0 +1,10 @@
+
+
+['shovel'] = {
+		label = 'Shovel',
+		weight = 1000,
+		stack = false, 
+		client = {
+			event = 'yoda-cemeteryrob:startRob'
+		}
+	},

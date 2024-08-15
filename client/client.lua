@@ -39,7 +39,35 @@ end)
 
 RegisterNetEvent('yoda-cemeteryrob:spawnPed', function (loc)
     print('Ped Created')
-    local ped = CreateRandomPed(loc.x, loc.y, loc.z)
-    ApplyPedBlood(ped, 3, 0.0, 0.0, 0.0, "wound_sheet")
-    IsPedDeadOrDying(ped, false)
+
+    local model = GetHashKey('a_m_m_beach_02')
+
+    RequestModel(model)
+    while not HasModelLoaded(model) do
+        Wait(0)
+    end
+
+    local ped = CreatePed(25 , model, loc.x , loc.y , loc.z, 124.8383, true, true)
+
+    if DoesEntityExist(ped) then
+        print('Ped creation successful')
+
+        local animDict = "dead"
+        local animName = "dead_a"
+
+        RequestAnimDict(animDict)
+        while not HasAnimDictLoaded(animDict) do
+            Wait(0)
+        end
+
+        TaskPlayAnim(ped, animDict, animName, 8.0, -8.0, -1, 1, 0, false, false, false)
+
+        ApplyPedDamagePack(ped, "BigHitByVehicle", 1.0, 1.0)
+        SetEntityHealth(ped, 0)
+        TaskStartScenarioAtPosition(ped, "WORLD_HUMAN_BUM_SLUMPED", loc.x, loc.y, loc.z, 0.0, -1, true, false) -- Mantém o ped deitado
+
+
+    else
+        print('Failed to create Ped')
+    end
 end)
