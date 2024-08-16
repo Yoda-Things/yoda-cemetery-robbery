@@ -22,7 +22,7 @@ end
 
 localeses = loadLocaleses(Config.Locale or "en")
 
-function _c(key, ...)
+function _t(key, ...)
     local keys = {}
     for k in string.gmatch(key, "[^.]+") do
         table.insert(keys, k)
