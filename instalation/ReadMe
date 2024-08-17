@@ -1,0 +1,154 @@
+-- ox inventory:
+
+	['shovel'] = {
+		label = 'Shovel',
+		weight = 1000,
+		stack = false, 
+		client = {
+			event = 'yoda-cemeteryrob:startRob'
+		}
+	},
+
+	['blood_evidence'] ={
+		label = 'Blood Evidence',
+    	weight = 100, 
+    	stack = false,
+    	close = true,
+    	description = 'A sample of blood collected at a crime scene.',
+    	client = {
+    	    image = 'blood_evidence.png',
+    	},
+    	consume = 0,
+    	metadata = {
+    	    assailant = 'Unknown'
+    	}
+	},
+
+	["silver_ring"] = {
+		label = "Anel de prata",
+		weight = 200,
+		stack = true,
+		close = false,
+		description = "",
+		client = {
+			image = "silver_ring.png",
+		}
+	},
+
+	["diamond_ring_silver"] = {
+		label = "Anel de prata com diamante",
+		weight = 200,
+		stack = true,
+		close = false,
+		description = "",
+		client = {
+			image = "diamond_ring_silver.png",
+		}
+	},
+
+	["goldchain"] = {
+		label = "Corrente de ouro",
+		weight = 200,
+		stack = true,
+		close = false,
+		description = "",
+		client = {
+			image = "goldchain.png",
+		}
+	},
+
+	["diamond_necklace"] = {
+		label = "Colar de diamante",
+		weight = 200,
+		stack = true,
+		close = false,
+		description = "",
+		client = {
+			image = "diamond_necklace.png",
+		}
+	},
+
+--qb inventory:
+
+-- qb-core/shared/items.lua
+
+["shovel"] = {
+    name = "shovel",
+    label = "Shovel",
+    weight = 1000,
+    type = "item",
+    image = "shovel.png",
+    unique = true,
+    useable = true,
+    shouldClose = true,
+    combinable = nil,
+    description = "A tool used to dig",
+},
+
+["blood_evidence"] = {
+    name = "blood_evidence",
+    label = "Blood Evidence",
+    weight = 100,
+    type = "item",
+    image = "blood_evidence.png",
+    unique = true,
+    useable = false,
+    shouldClose = true,
+    combinable = nil,
+    description = "A sample of blood collected at a crime scene.",
+    metadata = {
+        assailant = "Unknown",
+    },
+},
+
+["silver_ring"] = {
+    name = "silver_ring",
+    label = "Anel de prata",
+    weight = 200,
+    type = "item",
+    image = "silver_ring.png",
+    unique = false,
+    useable = false,
+    shouldClose = true,
+    combinable = nil,
+    description = "",
+},
+
+["diamond_ring_silver"] = {
+    name = "diamond_ring_silver",
+    label = "Anel de prata com diamante",
+    weight = 200,
+    type = "item",
+    image = "diamond_ring_silver.png",
+    unique = false,
+    useable = false,
+    shouldClose = true,
+    combinable = nil,
+    description = "",
+},
+
+["goldchain"] = {
+    name = "goldchain",
+    label = "Corrente de ouro",
+    weight = 200,
+    type = "item",
+    image = "goldchain.png",
+    unique = false,
+    useable = false,
+    shouldClose = true,
+    combinable = nil,
+    description = "",
+},
+
+["diamond_necklace"] = {
+    name = "diamond_necklace",
+    label = "Colar de diamante",
+    weight = 200,
+    type = "item",
+    image = "diamond_necklace.png",
+    unique = false,
+    useable = false,
+    shouldClose = true,
+    combinable = nil,
+    description = "",
+},

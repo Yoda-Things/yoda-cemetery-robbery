@@ -1,10 +1,65 @@
 local TARGET = Config.Target
+local locInfos = false
+local inRob = false
+local FRAMEWORK = Config.Framework
+
+local ESX, QB
+if FRAMEWORK == 'ESX' then
+    ESX = exports["es_extended"]:getSharedObject()
+else
+    QB = exports["qb-core"]:GetCoreObject()
+end
+
+if FRAMEWORK == 'QB' then
+    playerJob = QB.Functions.GetPlayerData().job
+end
+
+local evidenceAnalysisCoords = Config.CheckEvidenceCoords
+
+Citizen.CreateThread(function ()
+    if playerJob and playerJob.name == Config.PoliceJob then
+        if TARGET == 'OX' then
+            exports.ox_target:addSphereZone({
+                coords = evidenceAnalysisCoords,
+                radius = 2.0,
+                options = {
+                    name = 'yoda-cemeteryrob:analyzeEvidence',
+                    icon = 'fas fa-microscope',
+                    label = _t('target.analyze_evidence'),
+                    onSelect = function ()
+                        TriggerServerEvent('yoda-cemeteryrob:analyzeEvidence')
+                    end
+                }
+            })
+        else
+            exports['qb-target']:AddCircleZone('analyzeEvidence', evidenceAnalysisCoords, 2.0, {
+                name = 'analyzeEvidence',
+                debugPoly = false,
+                useZ = true}, {
+                options = {
+                    {
+                        action = function ()
+                            TriggerServerEvent('yoda-cemeteryrob:analyzeEvidence')
+                        end,
+                        icon = "fas fa-microscope",
+                        label = _t('target.analyze_evidence'),
+                    }
+                },
+                distance = 2.0
+            })
+        end
+    end
+end)
+
 
 RegisterNetEvent('yoda-cemeteryrob:startRob', function ()
     local ped = PlayerPedId()
     local pos = GetEntityCoords(ped, false)
 
-    local dist = GetDistanceBetweenCoords(0.0, 0.0, 0.0, 5.0, 5.0, 5.0, true)
+    if not locInfos then
+        TriggerServerEvent('yoda-cemeteryrob:randomLocInfos')
+    end
+
     for _, loc in pairs(Config.robloc) do
         local dist = #(loc.xy - pos.xy)
         if dist < 1 then
@@ -13,9 +68,9 @@ RegisterNetEvent('yoda-cemeteryrob:startRob', function ()
     end
 end)
 
-RegisterNetEvent('yoda-cemeteryrob:startDigging', function (loc)
+RegisterNetEvent('yoda-cemeteryrob:startDigging', function (loc, bodyinfo)
     local ped = PlayerPedId()
-    
+
     RequestAnimDict('amb@world_human_gardener_plant@male@base')
     while not HasAnimDictLoaded('amb@world_human_gardener_plant@male@base') do
         Wait(0)
@@ -46,9 +101,18 @@ RegisterNetEvent('yoda-cemeteryrob:startDigging', function (loc)
 
     DeleteObject(shovel)
     SetModelAsNoLongerNeeded(shovelModel)
+
+    if not bodyinfo then
+        TriggerClientEvent('yoda-cemeteryrob:noBodysFound', source)
+    elseif not inRob then 
+        inRob = true
+        TriggerEvent('yoda-cemeteryrob:spawnPed', loc)
+    end
+
+    TriggerEvent('yoda-cemeteryrob:notifyPolice', loc)
 end)
 
-RegisterNetEvent('yoda-cemeteryrob:spawnPed', function (loc)
+RegisterNetEvent('yoda-cemeteryrob:spawnPed', function(loc)
     local model = GetHashKey('a_m_m_beach_02')
 
     RequestModel(model)
@@ -59,7 +123,7 @@ RegisterNetEvent('yoda-cemeteryrob:spawnPed', function (loc)
     local _, groundZ = GetGroundZFor_3dCoord(loc.x, loc.y, loc.z, true)
     local offsetZ = 1.0
 
-    local ped = CreatePed(25, model, loc.x, loc.y, groundZ + offsetZ, 124.8383, true, true)
+    ped = CreatePed(25, model, loc.x, loc.y, groundZ + offsetZ, 124.8383, true, true)
 
     if DoesEntityExist(ped) then
         local animDict = "dead"
@@ -84,7 +148,6 @@ RegisterNetEvent('yoda-cemeteryrob:spawnPed', function (loc)
 
         FreezeEntityPosition(ped, true)
         SetEntityCollision(ped, false, false)
-
         TriggerEvent('yoda-cemeteryrob:createTarget', ped, loc)
     end
 end)
@@ -92,7 +155,7 @@ end)
 RegisterNetEvent('yoda-cemeteryrob:createTarget', function (ped, loc)
     if DoesEntityExist(ped) then
         if TARGET == 'OX' then
-            exports.ox_target:addSphereZone({
+            target1 = exports.ox_target:addSphereZone({
                 coords = vector3(loc.x, loc.y, loc.z - 1),
                 radius = 2.0,
                 options = {
@@ -100,19 +163,20 @@ RegisterNetEvent('yoda-cemeteryrob:createTarget', function (ped, loc)
                     icon = 'fas fa-user',
                     label = _t('target.rob'),
                     onSelect = function ()
-                        TriggerServerEvent('yoda-cemeteryrob:robResult')
+                        TriggerEvent('yoda-cemeteryrob:playSearchAnim', source, ped, loc)
                     end
                 }
             })
         else
-            exports['qb-target']:AddCircleZone('targetRob', vector3(loc.x, loc.y, loc.z - 1), 2.0, {
-                name = 'targetRob1',
+            exports['qb-target']:AddCircleZone('targetrob', vector3(loc.x, loc.y, loc.z - 1), 2.0, {
+                name = 'targetrob',
                 debugPoly = false,
                 useZ = true}, {
                 options = {
                     {
-                        type = "server",
-                        event = "yoda-cemeteryrob:robResult",
+                        action = function ()
+                            TriggerEvent('yoda-cemeteryrob:playSearchAnim', source, ped, loc)
+                        end,
                         icon = "fas fa-user",
                         label = _t('target.rob'),
                     }
@@ -125,3 +189,84 @@ RegisterNetEvent('yoda-cemeteryrob:createTarget', function (ped, loc)
     end
 end)
 
+RegisterNetEvent('yoda-cemeteryrob:deleteTarget', function (ped, loc)
+    if TARGET == 'OX' then
+        exports.ox_target:removeZone(target1)
+    else
+        exports['qb-target']:RemoveZone("targetrob")
+    end
+    TriggerServerEvent('yoda-cemeteryrob:createEvidence', ped, loc, playerJob)
+    inRob = false
+end)
+
+RegisterNetEvent('yoda-cemeteryrob:notifyPolice', function(loc)
+    local percentage = Config.PoliceNotify * 0.01
+    local chance = math.random()
+    if chance <= percentage then
+        exports["ps-dispatch"]:CustomAlert({
+            coords = vector3(loc.x, loc.y, loc.z),
+            message = "Criminal Activity - Camp Robbery",
+            dispatchCode = "10-4 Camp Robbery",
+            description = "Camp Robbery",
+            radius = 0,
+            sprite = 64,
+            color = 2,
+            scale = 1.0,
+            length = 3,
+        })
+    end
+end)
+
+RegisterNetEvent('yoda-cemeteryrob:createTargetEvidence', function (ped, loc, assailantName)
+    if DoesEntityExist(ped) and assailantName then
+        if TARGET == 'OX' then
+            target2 = exports.ox_target:addSphereZone({
+                coords = vector3(loc.x, loc.y, loc.z - 1),
+                radius = 2.0,
+                options = {
+                    name = 'yoda-cemeteryrob:createEvidence',
+                    icon = 'fas fa-user',
+                    label = _t('target.evidence'),
+                    onSelect = function ()
+                        TriggerServerEvent('yoda-cemeteryrob:receiveEvidence', assailantName)
+                    end
+                }
+            })
+        else
+            exports['qb-target']:AddCircleZone('targetevidence', vector3(loc.x, loc.y, loc.z - 1), 2.0, {
+                name = 'targetevidence',
+                debugPoly = false,
+                useZ = true}, {
+                options = {
+                    {
+                        action = function ()
+                            TriggerServerEvent('yoda-cemeteryrob:receiveEvidence', assailantName)
+                        end,
+                        icon = "fas fa-user",
+                        label = _t('target.evidence'),
+                    }
+                },
+                distance = 2.0
+            })
+        end
+    else
+        print('Ped entity does not exist, cannot create target.')
+    end
+end)
+
+RegisterNetEvent('yoda-cemeteryrob:playSearchAnim')
+AddEventHandler('yoda-cemeteryrob:playSearchAnim', function(ped, loc)
+    local playerPed = PlayerPedId()
+
+    RequestAnimDict('amb@medic@standing@kneel@base')
+    while not HasAnimDictLoaded('amb@medic@standing@kneel@base') do
+        Wait(0)
+    end
+
+    TaskPlayAnim(playerPed, 'amb@medic@standing@kneel@base', 'base', 8.0, -8.0, 5000, 1, 0, false, false, false)
+    Wait(5000)
+
+    ClearPedTasks(playerPed)
+
+    TriggerServerEvent('yoda-cemeteryrob:robResult', ped, loc)
+end)

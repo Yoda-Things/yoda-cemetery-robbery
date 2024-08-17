@@ -1,9 +1,19 @@
 Config = {}
 
 Config.Locale = 'en'
+Config.Framework = 'QB' -- ESX OR QB
 
 Config.Target = 'QB' -- OX OR QB
 Config.Notify = 'QB' -- OX OR QB
+Config.Inventory = 'QB' -- OX OR QB
+
+Config.Camp = 70 -- Percentage to have a body on the camp
+Config.Values = 70 -- Percentage for body values
+Config.PoliceNotify = 60 -- Percentage to notify the police
+Config.PoliceJob = 'police' -- Police Job
+
+Config.CheckEvidenceCoords = vec3(446.7606, -974.2661, 30.4386) -- Coords for target to check Evidence
+
 
 Config.Items = {
     i1 = {
@@ -12,7 +22,22 @@ Config.Items = {
         max = 100,
     },
     i2 = {
-        item = 'jewel',
+        item = 'diamond_necklace',
+        min = 3,
+        max = 10,
+    },
+    i3 = {
+        item = 'goldchain',
+        min = 3,
+        max = 10,
+    },
+    i4 = {
+        item = 'diamond_ring_silver',
+        min = 3,
+        max = 10,
+    },
+    i5 = {
+        item = 'silver_ring',
         min = 3,
         max = 10,
     }
