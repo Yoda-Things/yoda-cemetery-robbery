@@ -3,9 +3,9 @@ Config = {}
 Config.Locale = 'en'
 Config.Framework = 'QB' -- ESX OR QB
 
-Config.Target = 'QB' -- OX OR QB
+Config.Target = 'OX' -- OX OR QB
 Config.Notify = 'QB' -- OX OR QB
-Config.Inventory = 'QB' -- OX OR QB
+Config.Inventory = 'OX' -- OX OR QB
 
 Config.Camp = 70 -- Percentage to have a body on the camp
 Config.Values = 70 -- Percentage for body values
@@ -43,11 +43,11 @@ Config.Items = {
     }
 }
 
-Config.robloc = {
-    loc1 = vec3(-1765.0946, -211.6655, 55.1037),
-    loc2 = vec3(-1766.4816, -209.9521, 54.9043),
-}
-
 Config.peds = {
     ped1 = 'a_m_m_beach_02',
+}
+
+Config.robloc = {
+    loc1 = vec3(-1806.2664, -259.9089, 43.6700),
+    loc2 = vec3(-1775.7920, -220.1044, 53.2606),
 }

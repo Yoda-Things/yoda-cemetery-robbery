@@ -2,55 +2,95 @@ local TARGET = Config.Target
 local locInfos = false
 local inRob = false
 local FRAMEWORK = Config.Framework
+local activeRobs = {}
+local target1 = nil
+local target2 = nil
+local evidenceTargets = {}
 
 local ESX, QB
 if FRAMEWORK == 'ESX' then
     ESX = exports["es_extended"]:getSharedObject()
 else
-    QB = exports["qb-core"]:GetCoreObject()
+    QBCore = exports["qb-core"]:GetCoreObject()
 end
 
 if FRAMEWORK == 'QB' then
-    playerJob = QB.Functions.GetPlayerData().job
+    playerJob = QBCore.Functions.GetPlayerData().job
 end
 
 local evidenceAnalysisCoords = Config.CheckEvidenceCoords
 
-Citizen.CreateThread(function ()
-    if playerJob and playerJob.name == Config.PoliceJob then
+function ApplyEvidenceTargetsToPolice()
+    TriggerServerEvent('yoda-cemeteryrob:sendPoliceTargets')
+end
+
+local function getPlayerData()
+    local firstname, secondname
+    if FRAMEWORK == 'ESX' then
+        firstname = ESX.PlayerData.firstName
+        secondname = ESX.PlayerData.lastName
+    else
+        local PlayerData = QBCore.Functions.GetPlayerData()
+        firstname = PlayerData.charinfo.firstname
+        secondname = PlayerData.charinfo.lastname
+    end
+
+    assailantName = firstname .. " " .. secondname
+end
+
+if FRAMEWORK == 'QB' then
+    RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+        getPlayerData()
+    end) 
+    getPlayerData()
+else
+    getPlayerData()
+end
+
+RegisterNetEvent('yoda-cemeteryrob:createPoliceTarget', function()
+    if evidenceTargets['analyzeEvidence'] then
         if TARGET == 'OX' then
-            exports.ox_target:addSphereZone({
-                coords = evidenceAnalysisCoords,
-                radius = 2.0,
-                options = {
-                    name = 'yoda-cemeteryrob:analyzeEvidence',
-                    icon = 'fas fa-microscope',
-                    label = _t('target.analyze_evidence'),
-                    onSelect = function ()
-                        TriggerServerEvent('yoda-cemeteryrob:analyzeEvidence')
-                    end
-                }
-            })
+            exports.ox_target:removeZone(evidenceTargets['analyzeEvidence'])
         else
-            exports['qb-target']:AddCircleZone('analyzeEvidence', evidenceAnalysisCoords, 2.0, {
-                name = 'analyzeEvidence',
-                debugPoly = false,
-                useZ = true}, {
-                options = {
-                    {
-                        action = function ()
-                            TriggerServerEvent('yoda-cemeteryrob:analyzeEvidence')
-                        end,
-                        icon = "fas fa-microscope",
-                        label = _t('target.analyze_evidence'),
-                    }
-                },
-                distance = 2.0
-            })
+            exports['qb-target']:RemoveZone(evidenceTargets['analyzeEvidence'])
         end
+    end
+
+    if TARGET == 'OX' then
+        evidenceTargets['analyzeEvidence'] = exports.ox_target:addSphereZone({
+            coords = vector3(evidenceAnalysisCoords.x, evidenceAnalysisCoords.y, evidenceAnalysisCoords.z),
+            radius = 2.0,
+            options = {
+                name = 'yoda-cemeteryrob:analyzeEvidence',
+                icon = 'fas fa-microscope',
+                label = _t('target.analyze_evidence'),
+                onSelect = function ()
+                    TriggerServerEvent('yoda-cemeteryrob:analyzeEvidence')
+                end
+            }
+        })
+    else
+        evidenceTargets['analyzeEvidence'] = exports['qb-target']:AddCircleZone('analyzeEvidence', vector3(evidenceAnalysisCoords.x, evidenceAnalysisCoords.y, evidenceAnalysisCoords.z), 2.0, {
+            name = 'analyzeEvidence',
+            debugPoly = false,
+            useZ = true}, {
+            options = {
+                {
+                    action = function ()
+                        TriggerServerEvent('yoda-cemeteryrob:analyzeEvidence')
+                    end,
+                    icon = "fas fa-microscope",
+                    label = _t('target.analyze_evidence'),
+                }
+            },
+            distance = 2.0
+        })
     end
 end)
 
+Citizen.CreateThread(function ()
+    ApplyEvidenceTargetsToPolice()
+end)
 
 RegisterNetEvent('yoda-cemeteryrob:startRob', function ()
     local ped = PlayerPedId()
@@ -64,11 +104,13 @@ RegisterNetEvent('yoda-cemeteryrob:startRob', function ()
         local dist = #(loc.xy - pos.xy)
         if dist < 1 then
             TriggerServerEvent('yoda-cemeteryrob:searchLocInfo', loc)
+            break
         end
     end
 end)
 
-RegisterNetEvent('yoda-cemeteryrob:startDigging', function (loc, bodyinfo)
+
+RegisterNetEvent('yoda-cemeteryrob:startDigging', function (loc, bodyinfo, grave)
     local ped = PlayerPedId()
 
     RequestAnimDict('amb@world_human_gardener_plant@male@base')
@@ -86,7 +128,6 @@ RegisterNetEvent('yoda-cemeteryrob:startDigging', function (loc, bodyinfo)
     AttachEntityToEntity(shovel, ped, GetPedBoneIndex(ped, 57005), 0.1, 0.0, 0.0, 0.0, 0.0, 100.0, true, true, false, true, 1, true)
 
     TaskPlayAnim(ped, 'amb@world_human_gardener_plant@male@base', 'base', 8.0, -8.0, 10000, 1, 0, false, false, false)
-
     local n = 0
     while n < 10 do
         Wait(1000)
@@ -102,17 +143,17 @@ RegisterNetEvent('yoda-cemeteryrob:startDigging', function (loc, bodyinfo)
     DeleteObject(shovel)
     SetModelAsNoLongerNeeded(shovelModel)
 
-    if not bodyinfo then
-        TriggerClientEvent('yoda-cemeteryrob:noBodysFound', source)
-    elseif not inRob then 
-        inRob = true
-        TriggerEvent('yoda-cemeteryrob:spawnPed', loc)
+    if not activeRobs[loc] and bodyinfo then 
+        activeRobs[loc] = true
+        TriggerEvent('yoda-cemeteryrob:spawnPed', loc, grave)
+    elseif not activeRobs[loc] and not bodyinfo then
+        TriggerEvent('yoda-cemeteryrob:noBodysFound')
     end
 
     TriggerEvent('yoda-cemeteryrob:notifyPolice', loc)
 end)
 
-RegisterNetEvent('yoda-cemeteryrob:spawnPed', function(loc)
+RegisterNetEvent('yoda-cemeteryrob:spawnPed', function(loc, grave)
     local model = GetHashKey('a_m_m_beach_02')
 
     RequestModel(model)
@@ -148,55 +189,51 @@ RegisterNetEvent('yoda-cemeteryrob:spawnPed', function(loc)
 
         FreezeEntityPosition(ped, true)
         SetEntityCollision(ped, false, false)
-        TriggerEvent('yoda-cemeteryrob:createTarget', ped, loc)
+        TriggerEvent('yoda-cemeteryrob:createTarget', ped, loc, grave)
     end
 end)
 
-RegisterNetEvent('yoda-cemeteryrob:createTarget', function (ped, loc)
-    if DoesEntityExist(ped) then
-        if TARGET == 'OX' then
-            target1 = exports.ox_target:addSphereZone({
-                coords = vector3(loc.x, loc.y, loc.z - 1),
-                radius = 2.0,
-                options = {
-                    name = 'yoda-cemeteryrob:targetToRob',
-                    icon = 'fas fa-user',
-                    label = _t('target.rob'),
-                    onSelect = function ()
-                        TriggerEvent('yoda-cemeteryrob:playSearchAnim', source, ped, loc)
-                    end
-                }
-            })
-        else
-            exports['qb-target']:AddCircleZone('targetrob', vector3(loc.x, loc.y, loc.z - 1), 2.0, {
-                name = 'targetrob',
-                debugPoly = false,
-                useZ = true}, {
-                options = {
-                    {
-                        action = function ()
-                            TriggerEvent('yoda-cemeteryrob:playSearchAnim', source, ped, loc)
-                        end,
-                        icon = "fas fa-user",
-                        label = _t('target.rob'),
-                    }
-                },
-                distance = 2.0
-            })
-        end
+RegisterNetEvent('yoda-cemeteryrob:createTarget', function (ped, loc, grave)
+    if TARGET == 'OX' then
+        target1 = exports.ox_target:addSphereZone({
+            coords = vector3(loc.x, loc.y, loc.z - 1),
+            radius = 2.0,
+            options = {
+                name = 'yoda-cemeteryrob:targetToRob',
+                icon = 'fas fa-user',
+                label = _t('target.rob'),
+                onSelect = function ()
+                    TriggerEvent('yoda-cemeteryrob:playSearchAnim', source, ped, loc, grave)
+                end
+            }
+        })
     else
-        print('Ped entity does not exist, cannot create target.')
+        exports['qb-target']:AddCircleZone('targetrob', vector3(loc.x, loc.y, loc.z - 1), 2.0, {
+            name = 'targetrob',
+            debugPoly = false,
+            useZ = true}, {
+            options = {
+                {
+                    action = function ()
+                        TriggerEvent('yoda-cemeteryrob:playSearchAnim', source, ped, loc, grave)
+                    end,
+                    icon = "fas fa-user",
+                    label = _t('target.rob'),
+                }
+            },
+            distance = 2.0
+        })
     end
 end)
 
-RegisterNetEvent('yoda-cemeteryrob:deleteTarget', function (ped, loc)
+RegisterNetEvent('yoda-cemeteryrob:deleteTarget', function (ped, loc, grave)
     if TARGET == 'OX' then
         exports.ox_target:removeZone(target1)
     else
         exports['qb-target']:RemoveZone("targetrob")
     end
-    TriggerServerEvent('yoda-cemeteryrob:createEvidence', ped, loc, playerJob)
-    inRob = false
+    TriggerServerEvent('yoda-cemeteryrob:createTargetEvidenceServer', ped, loc, assailantName, grave)
+    activeRobs[loc] = nil
 end)
 
 RegisterNetEvent('yoda-cemeteryrob:notifyPolice', function(loc)
@@ -217,45 +254,51 @@ RegisterNetEvent('yoda-cemeteryrob:notifyPolice', function(loc)
     end
 end)
 
-RegisterNetEvent('yoda-cemeteryrob:createTargetEvidence', function (ped, loc, assailantName)
-    if DoesEntityExist(ped) and assailantName then
+RegisterNetEvent('yoda-cemeteryrob:createTargetEvidenceClient', function(ped, loc, assailantName)
+    if target2 then
         if TARGET == 'OX' then
-            target2 = exports.ox_target:addSphereZone({
-                coords = vector3(loc.x, loc.y, loc.z - 1),
-                radius = 2.0,
-                options = {
-                    name = 'yoda-cemeteryrob:createEvidence',
-                    icon = 'fas fa-user',
-                    label = _t('target.evidence'),
-                    onSelect = function ()
-                        TriggerServerEvent('yoda-cemeteryrob:receiveEvidence', assailantName)
-                    end
-                }
-            })
+            exports.ox_target:removeZone(target2)
         else
-            exports['qb-target']:AddCircleZone('targetevidence', vector3(loc.x, loc.y, loc.z - 1), 2.0, {
-                name = 'targetevidence',
-                debugPoly = false,
-                useZ = true}, {
-                options = {
-                    {
-                        action = function ()
-                            TriggerServerEvent('yoda-cemeteryrob:receiveEvidence', assailantName)
-                        end,
-                        icon = "fas fa-user",
-                        label = _t('target.evidence'),
-                    }
-                },
-                distance = 2.0
-            })
+            exports['qb-target']:RemoveZone('targetevidence')
         end
+        target2 = nil
+    end
+    if TARGET == 'OX' then
+        target2 = exports.ox_target:addSphereZone({
+            coords = vector3(loc.x, loc.y, loc.z - 1),
+            radius = 2.0,
+            options = {
+                name = 'yoda-cemeteryrob:createEvidence',
+                icon = 'fas fa-user',
+                label = _t('target.evidence'),
+                onSelect = function ()
+                    TriggerServerEvent('yoda-cemeteryrob:receiveEvidence', assailantName)
+                end
+            }
+        })
     else
-        print('Ped entity does not exist, cannot create target.')
+        exports['qb-target']:AddCircleZone('targetevidence', vector3(loc.x, loc.y, loc.z - 1), 2.0, {
+            name = 'targetevidence',
+            debugPoly = false,
+            useZ = true}, {
+            options = {
+                {
+                    action = function ()
+                        TriggerServerEvent('yoda-cemeteryrob:receiveEvidence', assailantName)
+                    end,
+                    icon = "fas fa-user",
+                    label = _t('target.evidence'),
+                }
+            },
+            distance = 2.0
+        })
+        target2 = 'targetevidence'
     end
 end)
 
+
 RegisterNetEvent('yoda-cemeteryrob:playSearchAnim')
-AddEventHandler('yoda-cemeteryrob:playSearchAnim', function(ped, loc)
+AddEventHandler('yoda-cemeteryrob:playSearchAnim', function(ped, loc, grave)
     local playerPed = PlayerPedId()
 
     RequestAnimDict('amb@medic@standing@kneel@base')
@@ -268,5 +311,27 @@ AddEventHandler('yoda-cemeteryrob:playSearchAnim', function(ped, loc)
 
     ClearPedTasks(playerPed)
 
-    TriggerServerEvent('yoda-cemeteryrob:robResult', ped, loc)
+    TriggerServerEvent('yoda-cemeteryrob:robResult', ped, loc, grave)
+end)
+
+RegisterNetEvent('yoda-cemeteryrob:removeTargetAndPed', function(source, assailantName)
+    if target1 then
+        if TARGET == 'OX' then
+            exports.ox_target:removeZone(target1)
+        else
+            exports['qb-target']:RemoveZone('targetrob')
+        end
+        target1 = nil
+    end
+
+    if target2 then
+        if TARGET == 'OX' then
+            exports.ox_target:removeZone(target2)
+        else
+            exports['qb-target']:RemoveZone('targetevidence')
+        end
+        target2 = nil
+    end
+
+    DeleteEntity(ped)
 end)
