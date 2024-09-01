@@ -1,6 +1,17 @@
-Ox Invetory
+-- ADD MORE COORDS 
 
-['shovel'] = {
+-- To add more tombs to the "steel" configuration, follow these steps:
+
+-- Create a file named config2.lua in the yoda-cemetery-robbery folder.
+-- Open the existing config.lua file and locate the section that contains Config.robloc = { ... }. Copy all the code within this section.
+-- Paste the copied code into config2.lua.
+-- Navigate to the tomb(s) you want to add in the game, and use the /addcoord command at each location. This will add the coordinates for the new tombs.
+-- Once you've added all the desired tombs, use the /closecoord command to finalize the process.
+-- Copy the updated code from config2.lua and replace the corresponding section in config.lua with this new code.
+
+-- ox inventory:
+
+	['shovel'] = {
 		label = 'Shovel',
 		weight = 1000,
 		stack = false, 
@@ -8,3 +19,147 @@ Ox Invetory
 			event = 'yoda-cemeteryrob:startRob'
 		}
 	},
+
+	['evidence'] ={
+		label = 'Evidence',
+    	weight = 100, 
+    	stack = false,
+    	close = true,
+    	description = 'A finger print collected at a crime scene.',
+    	client = {
+    	    image = 'evidence.png',
+    	},
+    	consume = 0,
+    	metadata = {
+    	    assailant = 'Unknown'
+    	}
+	},
+
+	["silver_ring"] = {
+		label = "Anel de prata",
+		weight = 200,
+		stack = true,
+		close = false,
+		description = "",
+		client = {
+			image = "silver_ring.png",
+		}
+	},
+
+	["diamond_ring_silver"] = {
+		label = "Anel de prata com diamante",
+		weight = 200,
+		stack = true,
+		close = false,
+		description = "",
+		client = {
+			image = "diamond_ring_silver.png",
+		}
+	},
+
+	["goldchain"] = {
+		label = "Corrente de ouro",
+		weight = 200,
+		stack = true,
+		close = false,
+		description = "",
+		client = {
+			image = "goldchain.png",
+		}
+	},
+
+	["diamond_necklace"] = {
+		label = "Colar de diamante",
+		weight = 200,
+		stack = true,
+		close = false,
+		description = "",
+		client = {
+			image = "diamond_necklace.png",
+		}
+	},
+
+--qb inventory:
+
+-- qb-core/shared/items.lua
+
+    ["shovel"] = {
+        name = "shovel",
+        label = "Shovel",
+        weight = 1000,
+        type = "item",
+        image = "shovel.png",
+        unique = true,
+        useable = true,
+        shouldClose = true,
+        combinable = nil,
+        description = "A tool used to dig",
+    },
+
+    ["evidence"] = {
+        name = "evidence",
+        label = "Evidence",
+        weight = 100,
+        type = "item",
+        image = "evidence.png",
+        unique = true,
+        useable = false,
+        shouldClose = true,
+        combinable = nil,
+        description = "A finger print collected at a crime scene.",
+        metadata = {
+            assailant = "Unknown",
+        },
+    },
+
+    ["silver_ring"] = {
+        name = "silver_ring",
+        label = "Anel de prata",
+        weight = 200,
+        type = "item",
+        image = "silver_ring.png",
+        unique = false,
+        useable = false,
+        shouldClose = true,
+        combinable = nil,
+        description = "",
+    },
+
+    ["diamond_ring_silver"] = {
+        name = "diamond_ring_silver",
+        label = "Anel de prata com diamante",
+        weight = 200,
+        type = "item",
+        image = "diamond_ring_silver.png",
+        unique = false,
+        useable = false,
+        shouldClose = true,
+        combinable = nil,
+        description = "",
+    },
+
+    ["goldchain"] = {
+        name = "goldchain",
+        label = "Corrente de ouro",
+        weight = 200,
+        type = "item",
+        image = "goldchain.png",
+        unique = false,
+        useable = false,
+        shouldClose = true,
+        combinable = nil,
+        description = "",
+    },
+
+    ["diamond_necklace"] = {
+        name = "diamond_necklace",
+        label = "Colar de diamante",
+        weight = 200,
+        type = "item",
+        image = "diamond_necklace.png",
+        unique = false,
+        useable = false,
+        shouldClose = true,
+        combinable = nil,
+        description = "",
+    },
