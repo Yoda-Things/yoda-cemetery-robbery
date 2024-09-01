@@ -1,10 +1,10 @@
 Config = {}
 
 Config.Locale = 'en'
-Config.Framework = 'QB' -- ESX OR QB
+Config.Framework = 'ESX' -- ESX OR QB
 
 Config.Target = 'OX' -- OX OR QB
-Config.Notify = 'QB' -- OX OR QB
+Config.Notify = 'OX' -- OX OR QB
 Config.Inventory = 'OX' -- OX OR QB
 
 Config.Camp = 70 -- Percentage to have a body on the camp

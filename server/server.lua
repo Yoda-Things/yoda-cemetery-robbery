@@ -83,8 +83,9 @@ AddEventHandler('yoda-cemeteryrob:searchLocInfo', function(loc)
             local open = grave.open
             
             if open == false then
+                grave.open = true
+                print("Grave status:", grave.loc, grave.open)
                 TriggerClientEvent('yoda-cemeteryrob:startDigging', source, loc, bodyinfo, grave)
-                Graves[grave] = {open = true}
             elseif open then
                 TriggerClientEvent('yoda-cemeteryrob:graveOpen', source)
                 return
@@ -137,9 +138,9 @@ AddEventHandler('yoda-cemeteryrob:receiveEvidence', function(assailantName)
     local source = source
 
     if Config.Inventory == 'OX' then
-        exports.ox_inventory:AddItem(source, 'evidence', 1, {assailant = assailantName})
+        exports.ox_inventory:AddItem(source, 'blood_evidence', 1, {assailant = assailantName})
     else
-        exports['qb-inventory']:AddItem(source, 'evidence', 1, {assailant = assailantName})
+        exports['qb-inventory']:AddItem(source, 'blood_evidence', 1, {assailant = assailantName})
     end
 
     local players = (FRAMEWORK == 'QB') and QBCore.Functions.GetQBPlayers() or ESX.GetPlayers()
@@ -168,7 +169,7 @@ AddEventHandler('yoda-cemeteryrob:analyzeEvidence', function()
         local inventory = xPlayer.getInventory()
 
         for _, item in pairs(inventory) do
-            if item.name == 'evidence' and item.count > 0 then
+            if item.name == 'blood_evidence' and item.count > 0 then
                 hasEvidence = true
                 assailantName = item.info.assailant
                 break
@@ -186,7 +187,7 @@ AddEventHandler('yoda-cemeteryrob:analyzeEvidence', function()
     else
         local Player = QBCore.Functions.GetPlayer(source)
         local job = Player.PlayerData.job
-        local evidenceItem = Player.Functions.GetItemByName('evidence')
+        local evidenceItem = Player.Functions.GetItemByName('blood_evidence')
 
         if evidenceItem then
             hasEvidence = true
@@ -208,10 +209,18 @@ AddEventHandler('yoda-cemeteryrob:sendPoliceTargets', function()
     local players = (FRAMEWORK == 'QB') and QBCore.Functions.GetQBPlayers() or ESX.GetPlayers()
 
     for _, player in pairs(players) do
-        local playerData = (FRAMEWORK == 'QB') and player.PlayerData or ESX.GetPlayerData(player)
-        
-        if playerData and playerData.job.name == Config.PoliceJob then
-            TriggerClientEvent('yoda-cemeteryrob:createPoliceTarget', player.PlayerData.source, evidenceAnalysisCoords)
+        local playerData
+
+        if FRAMEWORK == 'QB' then
+            playerData = player.PlayerData
+        else
+            local esxPlayer = ESX.GetPlayerFromId(player)
+            playerData = esxPlayer and esxPlayer.getJob()
+        end
+
+        if playerData and playerData.name == Config.PoliceJob then
+            local playerSource = (FRAMEWORK == 'QB') and player.PlayerData.source or player
+            TriggerClientEvent('yoda-cemeteryrob:createPoliceTarget', playerSource, evidenceAnalysisCoords)
         end
     end
 end)

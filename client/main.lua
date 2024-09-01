@@ -37,8 +37,6 @@ end
 
 if FRAMEWORK == 'QB' then
     playerJob = QBCore.Functions.GetPlayerData().job
-else
-    playerJob = ESX.GetPlayerData().job
 end
 
 local evidenceAnalysisCoords = Config.CheckEvidenceCoords
@@ -65,7 +63,7 @@ if FRAMEWORK == 'QB' then
     RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
         getPlayerData()
     end) 
-    getPlayerData()
+    --getPlayerData()
 else
     getPlayerData()
 end
@@ -115,27 +113,38 @@ Citizen.CreateThread(function ()
     ApplyEvidenceTargetsToPolice()
 end)
 
+RegisterNetEvent('yoda-cemeteryrob:locInfosGenerated')
+AddEventHandler('yoda-cemeteryrob:locInfosGenerated', function()
+    locInfos = true
+    TriggerEvent('yoda-cemeteryrob:startRob')
+end)
+
+
 RegisterNetEvent('yoda-cemeteryrob:startRob', function ()
     local ped = PlayerPedId()
     local pos = GetEntityCoords(ped, false)
-
-    if not locInfos then
-        TriggerServerEvent('yoda-cemeteryrob:randomLocInfos')
-    end
-
-    for _, loc in pairs(Config.robloc) do
-        local dist = #(loc.xy - pos.xy)
-        if dist < 1 then
-            TriggerServerEvent('yoda-cemeteryrob:searchLocInfo', loc)
-            break
+    if inRob then
+        TriggerEvent('yoda-cemeteryrob:robStarted')
+    else
+        for _, loc in pairs(Config.robloc) do
+            local dist = #(loc.xy - pos.xy)
+            if dist < 1 then
+                if not locInfos then
+                    TriggerServerEvent('yoda-cemeteryrob:randomLocInfos')
+                else
+                    inRob = true
+                    TriggerServerEvent('yoda-cemeteryrob:searchLocInfo', loc)
+                    break
+                end
+            end
         end
     end
 end)
 
-
 RegisterNetEvent('yoda-cemeteryrob:startDigging', function (loc, bodyinfo, grave)
     local ped = PlayerPedId()
 
+    print("Grave status:", grave.loc, grave.open)
     RequestAnimDict('amb@world_human_gardener_plant@male@base')
     while not HasAnimDictLoaded('amb@world_human_gardener_plant@male@base') do
         Wait(0)
@@ -257,6 +266,7 @@ RegisterNetEvent('yoda-cemeteryrob:deleteTarget', function (ped, loc, grave)
     end
     TriggerServerEvent('yoda-cemeteryrob:createTargetEvidenceServer', ped, loc, assailantName, grave)
     activeRobs[loc] = nil
+    inRob = false
 end)
 
 RegisterNetEvent('yoda-cemeteryrob:notifyPolice', function(loc)
@@ -335,6 +345,7 @@ AddEventHandler('yoda-cemeteryrob:playSearchAnim', function(ped, loc, grave)
     ClearPedTasks(playerPed)
 
     TriggerServerEvent('yoda-cemeteryrob:robResult', ped, loc, grave)
+
 end)
 
 RegisterNetEvent('yoda-cemeteryrob:removeTargetAndPed', function(source, assailantName)

@@ -10,6 +10,7 @@ return {
         bodyHasNoValues = 'The body has no valuables',
         bloodEvidenceCollected = 'You collected blood evidence!',
         evidenceAnalyzed = 'The evidence analysis shows the grave was robbed by: ',
-        noEvidence = 'You have no evidence to analyze.'
+        noEvidence = 'You have no evidence to analyze.',
+        robStarted = 'A robbery alredy has been started.'
     }
 }
