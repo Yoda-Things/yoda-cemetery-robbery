@@ -10,6 +10,49 @@ else
     QBCore = exports["qb-core"]:GetCoreObject()
 end
 
+local function getLastIndexFromFile()
+    local configFile = LoadResourceFile(GetCurrentResourceName(), "config2.lua")
+    if not configFile then
+        return 0
+    end
+
+    local lastIndex = 0
+    for loc in string.gmatch(configFile, "loc(%d+)") do
+        local num = tonumber(loc)
+        if num and num > lastIndex then
+            lastIndex = num
+        end
+    end
+
+    return lastIndex
+end
+
+RegisterNetEvent('yoda-cemeteryrob:requestLastIndex')
+AddEventHandler('yoda-cemeteryrob:requestLastIndex', function()
+    local source = source
+    local lastIndex = getLastIndexFromFile()
+    TriggerClientEvent('yoda-cemeteryrob:setLastIndex', source, lastIndex)
+end)
+
+RegisterNetEvent('yoda-cemeteryrob:saveCoords')
+AddEventHandler('yoda-cemeteryrob:saveCoords', function(coordsList)
+    local configFile = LoadResourceFile(GetCurrentResourceName(), "config2.lua")
+
+    if not configFile then
+        configFile = "Config.robloc = {\n"
+    else
+        configFile = configFile:gsub("%}\n$", "")
+    end
+
+    for loc, coords in pairs(coordsList) do
+        configFile = configFile .. string.format("    %s = vec3(%.4f, %.4f, %.4f),\n", loc, coords.x, coords.y, coords.z)
+    end
+
+    configFile = configFile .. "}\n"
+
+    SaveResourceFile(GetCurrentResourceName(), "config2.lua", configFile, -1)
+end)
+
 RegisterNetEvent('yoda-cemeteryrob:randomLocInfos')
 AddEventHandler('yoda-cemeteryrob:randomLocInfos', function()
     Graves = {}
@@ -94,9 +137,9 @@ AddEventHandler('yoda-cemeteryrob:receiveEvidence', function(assailantName)
     local source = source
 
     if Config.Inventory == 'OX' then
-        exports.ox_inventory:AddItem(source, 'blood_evidence', 1, {assailant = assailantName})
+        exports.ox_inventory:AddItem(source, 'evidence', 1, {assailant = assailantName})
     else
-        exports['qb-inventory']:AddItem(source, 'blood_evidence', 1, {assailant = assailantName})
+        exports['qb-inventory']:AddItem(source, 'evidence', 1, {assailant = assailantName})
     end
 
     local players = (FRAMEWORK == 'QB') and QBCore.Functions.GetQBPlayers() or ESX.GetPlayers()
@@ -125,7 +168,7 @@ AddEventHandler('yoda-cemeteryrob:analyzeEvidence', function()
         local inventory = xPlayer.getInventory()
 
         for _, item in pairs(inventory) do
-            if item.name == 'blood_evidence' and item.count > 0 then
+            if item.name == 'evidence' and item.count > 0 then
                 hasEvidence = true
                 assailantName = item.info.assailant
                 break
@@ -143,7 +186,7 @@ AddEventHandler('yoda-cemeteryrob:analyzeEvidence', function()
     else
         local Player = QBCore.Functions.GetPlayer(source)
         local job = Player.PlayerData.job
-        local evidenceItem = Player.Functions.GetItemByName('blood_evidence')
+        local evidenceItem = Player.Functions.GetItemByName('evidence')
 
         if evidenceItem then
             hasEvidence = true

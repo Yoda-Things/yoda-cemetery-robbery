@@ -7,6 +7,27 @@ local target1 = nil
 local target2 = nil
 local evidenceTargets = {}
 
+local coordsList = {}
+local startIndex = 1
+
+RegisterCommand('addcoord', function()
+    TriggerServerEvent('yoda-cemeteryrob:requestLastIndex')
+end, false)
+
+RegisterNetEvent('yoda-cemeteryrob:setLastIndex')
+AddEventHandler('yoda-cemeteryrob:setLastIndex', function(lastIndex)
+    startIndex = lastIndex + 1
+    local playerPed = PlayerPedId()
+    local coords = GetEntityCoords(playerPed)
+    coordsList["loc" .. startIndex] = vector3(coords.x, coords.y, coords.z)
+    print("Coordinates added: loc" .. startIndex .. " = " .. coords)
+    startIndex = startIndex + 1
+end)
+
+RegisterCommand('closecoord', function()
+    TriggerServerEvent('yoda-cemeteryrob:saveCoords', coordsList)
+end, false)
+
 local ESX, QB
 if FRAMEWORK == 'ESX' then
     ESX = exports["es_extended"]:getSharedObject()
@@ -16,6 +37,8 @@ end
 
 if FRAMEWORK == 'QB' then
     playerJob = QBCore.Functions.GetPlayerData().job
+else
+    playerJob = ESX.GetPlayerData().job
 end
 
 local evidenceAnalysisCoords = Config.CheckEvidenceCoords
