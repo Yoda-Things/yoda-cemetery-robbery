@@ -48,8 +48,13 @@ end
 local function getPlayerData()
     local firstname, secondname
     if FRAMEWORK == 'ESX' then
-        firstname = ESX.PlayerData.firstName
-        secondname = ESX.PlayerData.lastName
+        if ESX.PlayerData and ESX.PlayerData.firstName and ESX.PlayerData.lastName then
+            firstname = ESX.PlayerData.firstName
+            secondname = ESX.PlayerData.lastName
+        else
+            print("PlayerData not loaded.")
+            return
+        end
     else
         local PlayerData = QBCore.Functions.GetPlayerData()
         firstname = PlayerData.charinfo.firstname
@@ -64,8 +69,11 @@ if FRAMEWORK == 'QB' then
         getPlayerData()
     end) 
     --getPlayerData()
-else
-    getPlayerData()
+elseif FRAMEWORK == 'ESX' then
+    RegisterNetEvent('esx:playerLoaded', function()
+        getPlayerData()
+    end)
+    --getPlayerData()
 end
 
 RegisterNetEvent('yoda-cemeteryrob:createPoliceTarget', function()
