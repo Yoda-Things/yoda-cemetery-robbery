@@ -232,9 +232,16 @@ AddEventHandler('yoda-cemeteryrob:createTargetEvidenceServer', function(ped, loc
     local players = (FRAMEWORK == 'QB') and QBCore.Functions.GetQBPlayers() or ESX.GetPlayers()
 
     for _, player in pairs(players) do
-        local playerData = (FRAMEWORK == 'QB') and player.PlayerData or ESX.GetPlayerData(player)
+        local playerData
 
-        if playerData and playerData.job.name == Config.PoliceJob then
+        if FRAMEWORK == 'QB' then
+            playerData = player.PlayerData
+        else
+            local esxPlayer = ESX.GetPlayerFromId(player)
+            playerData = esxPlayer and esxPlayer.getJob()
+        end
+
+        if playerData and playerData.name == Config.PoliceJob then
             TriggerClientEvent('yoda-cemeteryrob:createTargetEvidenceClient', playerData.source, ped, loc, assailantName)
         end
     end

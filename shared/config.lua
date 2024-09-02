@@ -1,9 +1,9 @@
 Config = {}
 
 Config.Locale = 'en'
-Config.Framework = 'ESX' -- ESX OR QB
+Config.Framework = 'QB' -- ESX OR QB
 
-Config.Target = 'OX' -- OX OR QB
+Config.Target = 'QB' -- OX OR QB
 Config.Notify = 'OX' -- OX OR QB
 Config.Inventory = 'OX' -- OX OR QB
 
