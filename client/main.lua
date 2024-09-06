@@ -6,6 +6,8 @@ local activeRobs = {}
 local target1 = nil
 local target2 = nil
 local evidenceTargets = {}
+local currentTombs = {}
+local isInteracting = {}
 
 local coordsList = {}
 local startIndex = 1
@@ -20,7 +22,6 @@ AddEventHandler('yoda-cemeteryrob:setLastIndex', function(lastIndex)
     local playerPed = PlayerPedId()
     local coords = GetEntityCoords(playerPed)
     coordsList["loc" .. startIndex] = vector3(coords.x, coords.y, coords.z)
-    print("Coordinates added: loc" .. startIndex .. " = " .. coords)
     startIndex = startIndex + 1
 end)
 
@@ -118,41 +119,107 @@ RegisterNetEvent('yoda-cemeteryrob:createPoliceTarget', function()
 end)
 
 Citizen.CreateThread(function ()
+    TriggerServerEvent('yoda-cemeteryrob:randomLocInfos')
     ApplyEvidenceTargetsToPolice()
 end)
 
 RegisterNetEvent('yoda-cemeteryrob:locInfosGenerated')
-AddEventHandler('yoda-cemeteryrob:locInfosGenerated', function()
-    locInfos = true
-    TriggerEvent('yoda-cemeteryrob:startRob')
+AddEventHandler('yoda-cemeteryrob:locInfosGenerated', function(graves)
+    if Config.typeOfRobbery == 'target' then
+        TriggerServerEvent('yoda-cemeteryrob:checkPolice', graves)
+    end
 end)
 
-
-RegisterNetEvent('yoda-cemeteryrob:startRob', function ()
+RegisterNetEvent('yoda-cemeteryrob:startRob', function (count, graves)
     local ped = PlayerPedId()
     local pos = GetEntityCoords(ped, false)
-    if inRob then
-        TriggerEvent('yoda-cemeteryrob:robStarted')
-    else
-        for _, loc in pairs(Config.robloc) do
-            local dist = #(loc.xy - pos.xy)
-            if dist < 1 then
-                if not locInfos then
-                    TriggerServerEvent('yoda-cemeteryrob:randomLocInfos')
-                else
-                    inRob = true
-                    TriggerServerEvent('yoda-cemeteryrob:searchLocInfo', loc)
-                    break
+    local n = 0
+
+    if count >= Config.minPolice then
+        if inRob then
+            TriggerEvent('yoda-cemeteryrob:robStarted')
+        else
+            for _, grave in pairs(graves) do
+                n = n + 1
+                local loc = grave.loc
+                
+                if Config.typeOfRobbery == 'item' then
+                    local dist = #(loc.xy - pos.xy)
+                    if dist < 1 then
+                        if not locInfos then
+                            TriggerServerEvent('yoda-cemeteryrob:randomLocInfos')
+                        else
+                            inRob = true
+                            TriggerServerEvent('yoda-cemeteryrob:searchLocInfo', loc)
+                            break
+                        end
+                    end
                 end
+            end
+        end
+    else
+        TriggerEvent('yoda-cemeteryrob:notEnoughPolice')
+    end
+    if Config.typeOfRobbery == 'target' then
+        for _, grave in pairs(graves) do
+            n = n + 1
+            local loc = grave.loc
+            if TARGET == 'OX' then
+                local targetTomb = exports.ox_target:addSphereZone({
+                    coords = vector3(loc.x, loc.y, loc.z - 1),
+                    radius = 1.5,
+                    options = {
+                        name = 'yoda-cemeteryrob:targetToRob',
+                        icon = 'fas fa-user',
+                        label = 'Rob Tomb',
+                        onSelect = function ()
+                            if count >= Config.minPolice then
+                                if not isInteracting[n] then
+                                    inRob = true
+                                    TriggerServerEvent('yoda-cemeteryrob:searchLocInfo', n, loc)
+                                end
+                            else
+                                TriggerEvent('yoda-cemeteryrob:notEnoughPolice')
+                            end
+                        end
+                    }
+                })
+                currentTombs[n] = {target = targetTomb, coords = vector3(loc.x, loc.y, loc.z)}
+                isInteracting[n] = false
+            else
+                local targetTomb = exports['qb-target']:AddCircleZone('targetrobTomb' .. n, vector3(loc.x, loc.y, loc.z - 1), 1.5, {
+                    name = 'targetrobTomb' .. n,
+                    debugPoly = false,
+                    useZ = true
+                }, {
+                    options = {
+                        {
+                            action = function ()
+                                if count >= Config.minPolice then
+                                    if not isInteracting[n] then
+                                        inRob = true
+                                        TriggerServerEvent('yoda-cemeteryrob:searchLocInfo', n, loc)
+                                    end
+                                else
+                                    TriggerEvent('yoda-cemeteryrob:notEnoughPolice')
+                                end
+                            end,
+                            icon = "fas fa-user",
+                            label = 'Rob Tomb',
+                        }
+                    },
+                    distance = 1.5
+                })
+                currentTombs[n] = {target = targetTomb, targetName = 'targetrobTomb' .. n, coords = vector3(loc.x, loc.y, loc.z)}
+                isInteracting[n] = false
             end
         end
     end
 end)
 
-RegisterNetEvent('yoda-cemeteryrob:startDigging', function (loc, bodyinfo, grave)
+RegisterNetEvent('yoda-cemeteryrob:startDigging', function (index, loc, bodyinfo, grave)
+    isInteracting[index] = true
     local ped = PlayerPedId()
-
-    print("Grave status:", grave.loc, grave.open)
     RequestAnimDict('amb@world_human_gardener_plant@male@base')
     while not HasAnimDictLoaded('amb@world_human_gardener_plant@male@base') do
         Wait(0)
@@ -163,6 +230,27 @@ RegisterNetEvent('yoda-cemeteryrob:startDigging', function (loc, bodyinfo, grave
     while not HasModelLoaded(shovelModel) do
         Wait(0)
     end
+
+    local function removeTargetAndBlip(index)
+        if currentTombs[index] then
+            local tomb = currentTombs[index]
+
+            if TARGET == 'OX' then
+                if tomb.targetId then
+                    exports.ox_target:removeZone(tomb.targetId)
+                end
+            else
+                if tomb.targetName then
+                    exports['qb-target']:RemoveZone(tomb.targetName)
+                end
+            end
+
+            currentTombs[index] = nil
+            isInteracting[index] = nil
+        end
+    end
+
+    removeTargetAndBlip(index)
 
     local shovel = CreateObject(shovelModel, loc.x, loc.y, loc.z, true, true, false)
     AttachEntityToEntity(shovel, ped, GetPedBoneIndex(ped, 57005), 0.1, 0.0, 0.0, 0.0, 0.0, 100.0, true, true, false, true, 1, true)

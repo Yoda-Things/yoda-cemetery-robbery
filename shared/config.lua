@@ -7,6 +7,8 @@ Config.Target = 'QB' -- OX OR QB
 Config.Notify = 'OX' -- OX OR QB
 Config.Inventory = 'OX' -- OX OR QB
 
+Config.typeOfRobbery = 'target'-- target or item 
+
 Config.Camp = 70 -- Percentage to have a body on the camp
 Config.Values = 70 -- Percentage for body values
 Config.PoliceNotify = 60 -- Percentage to notify the police

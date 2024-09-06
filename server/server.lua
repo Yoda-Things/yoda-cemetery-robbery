@@ -63,6 +63,8 @@ AddEventHandler('yoda-cemeteryrob:randomLocInfos', function()
         local chance = math.random()
         if chance <= percentage then
             body = true
+        else
+            body = false
         end
         n = n + 1 
         local grave = 'Grave' .. n
@@ -72,27 +74,27 @@ AddEventHandler('yoda-cemeteryrob:randomLocInfos', function()
             open = false,
         }
     end
-    TriggerClientEvent('yoda-cemeteryrob:locInfosGenerated', source)
+    TriggerClientEvent('yoda-cemeteryrob:locInfosGenerated', source, Graves)
 end)
 
 RegisterNetEvent('yoda-cemeteryrob:searchLocInfo')
-AddEventHandler('yoda-cemeteryrob:searchLocInfo', function(loc)
+AddEventHandler('yoda-cemeteryrob:searchLocInfo', function(index, loc)
+    -- Verificar se o local existe na tabela de campas
     for _, grave in pairs(Graves) do
         if grave.loc == loc then
             local bodyinfo = grave.body
             local open = grave.open
-            
             if open == false then
                 grave.open = true
-                print("Grave status:", grave.loc, grave.open)
-                TriggerClientEvent('yoda-cemeteryrob:startDigging', source, loc, bodyinfo, grave)
-            elseif open then
+                TriggerClientEvent('yoda-cemeteryrob:startDigging', source, index, loc, bodyinfo, grave)
+            else
                 TriggerClientEvent('yoda-cemeteryrob:graveOpen', source)
                 return
             end
         end
     end
 end)
+
 
 RegisterNetEvent('yoda-cemeteryrob:robResult')
 AddEventHandler('yoda-cemeteryrob:robResult', function (ped, loc, grave)
@@ -245,4 +247,22 @@ AddEventHandler('yoda-cemeteryrob:createTargetEvidenceServer', function(ped, loc
             TriggerClientEvent('yoda-cemeteryrob:createTargetEvidenceClient', playerData.source, ped, loc, assailantName)
         end
     end
+end)
+
+RegisterNetEvent('yoda-cemeteryrob:checkPolice')
+AddEventHandler('yoda-cemeteryrob:checkPolice', function (graves)
+    local count = 0
+    local jobName = Config.PoliceJob
+    if FRAMEWORK == "esx" then
+        count = #ESX.GetExtendedPlayers('job', jobName)
+    else
+        local players = QBCore.Functions.GetPlayers()
+        for i = 1, #players, 1 do
+            local player = QBCore.Functions.GetPlayer(players[i])
+            if player and player.PlayerData.job.name == jobName then
+                count = count + 1
+            end
+        end
+    end
+    TriggerClientEvent('yoda-cemeteryrob:startRob')
 end)

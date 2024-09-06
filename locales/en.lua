@@ -11,6 +11,7 @@ return {
         bloodEvidenceCollected = 'You collected blood evidence!',
         evidenceAnalyzed = 'The evidence analysis shows the grave was robbed by: ',
         noEvidence = 'You have no evidence to analyze.',
-        robStarted = 'A robbery alredy has been started.'
+        robStarted = 'A robbery alredy has been started.',
+        notEnoughPolice = 'Not enough police on server!'
     }
 }
