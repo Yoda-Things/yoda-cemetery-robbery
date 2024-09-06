@@ -253,7 +253,7 @@ RegisterNetEvent('yoda-cemeteryrob:checkPolice')
 AddEventHandler('yoda-cemeteryrob:checkPolice', function (graves)
     local count = 0
     local jobName = Config.PoliceJob
-    if FRAMEWORK == "esx" then
+    if FRAMEWORK == "ESX" then
         count = #ESX.GetExtendedPlayers('job', jobName)
     else
         local players = QBCore.Functions.GetPlayers()
