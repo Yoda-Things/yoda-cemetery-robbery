@@ -79,7 +79,6 @@ end)
 
 RegisterNetEvent('yoda-cemeteryrob:searchLocInfo')
 AddEventHandler('yoda-cemeteryrob:searchLocInfo', function(index, loc)
-    -- Verificar se o local existe na tabela de campas
     for _, grave in pairs(Graves) do
         if grave.loc == loc then
             local bodyinfo = grave.body
@@ -249,20 +248,71 @@ AddEventHandler('yoda-cemeteryrob:createTargetEvidenceServer', function(ped, loc
     end
 end)
 
-RegisterNetEvent('yoda-cemeteryrob:checkPolice')
-AddEventHandler('yoda-cemeteryrob:checkPolice', function (graves)
+RegisterNetEvent('yoda-cemeteryrob:checkPoliceTarget')
+AddEventHandler('yoda-cemeteryrob:checkPoliceTarget', function(graves)
+    print('police event')
     local count = 0
     local jobName = Config.PoliceJob
+    
     if FRAMEWORK == "ESX" then
-        count = #ESX.GetExtendedPlayers('job', jobName)
+        local policePlayers = ESX.GetExtendedPlayers('job', jobName)
+        if type(policePlayers) == 'table' then
+            count = #policePlayers
+        else
+            print("Erro: ESX.GetExtendedPlayers não retornou uma tabela válida.")
+        end
     else
         local players = QBCore.Functions.GetPlayers()
-        for i = 1, #players, 1 do
-            local player = QBCore.Functions.GetPlayer(players[i])
-            if player and player.PlayerData.job.name == jobName then
-                count = count + 1
+        if type(players) == 'table' then
+            for i = 1, #players, 1 do
+                local player = QBCore.Functions.GetPlayer(players[i])
+                if player and player.PlayerData.job.name == jobName then
+                    count = count + 1
+                end
             end
+        else
+            print("Erro: QBCore.Functions.GetPlayers não retornou uma tabela válida.")
         end
     end
-    TriggerClientEvent('yoda-cemeteryrob:startRob')
+
+    if type(count) ~= 'number' then
+        count = 0
+    end
+    print(count)
+    TriggerClientEvent('yoda-cemeteryrob:startRob', source, count, graves)
+end)
+
+RegisterNetEvent('yoda-cemeteryrob:checkPoliceServer')
+AddEventHandler('yoda-cemeteryrob:checkPoliceServer', function()
+    print('police event')
+    local count = 0
+    local jobName = Config.PoliceJob
+    
+    if FRAMEWORK == "ESX" then
+        local policePlayers = ESX.GetExtendedPlayers('job', jobName)
+        if type(policePlayers) == 'table' then
+            count = #policePlayers
+        else
+            print("Erro: ESX.GetExtendedPlayers não retornou uma tabela válida.")
+        end
+    else
+        local players = QBCore.Functions.GetPlayers()
+        if type(players) == 'table' then
+            for i = 1, #players, 1 do
+                local player = QBCore.Functions.GetPlayer(players[i])
+                if player and player.PlayerData.job.name == jobName then
+                    count = count + 1
+                end
+            end
+        else
+            print("Erro: QBCore.Functions.GetPlayers não retornou uma tabela válida.")
+        end
+    end
+
+    if type(count) ~= 'number' then
+        count = 0
+    end
+
+    print(count)
+    TriggerClientEvent('yoda-cemeteryrob:startRob', source, count, Graves)
 end)
