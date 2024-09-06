@@ -13,7 +13,7 @@ Config.Camp = 70 -- Percentage to have a body on the camp
 Config.Values = 70 -- Percentage for body values
 Config.PoliceNotify = 60 -- Percentage to notify the police
 Config.PoliceJob = 'police' -- Police Job
-Config.minPolice = 4
+Config.minPolice = 4 -- Min police to rob a tomb
 
 Config.CheckEvidenceCoords = vec3(446.7606, -974.2661, 30.4386) -- Coords for target to check Evidence
 
