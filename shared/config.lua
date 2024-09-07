@@ -8,13 +8,13 @@ Config.Notify = 'OX' -- OX OR QB
 Config.Inventory = 'OX' -- OX OR QB
 Config.dispatch = 'PS' -- PS OR ORIGEN
 
-Config.typeOfRobbery = 'target'-- target or item 
+Config.typeOfRobbery = 'item'-- target or item 
 
 Config.Camp = 70 -- Percentage to have a body on the camp
 Config.Values = 70 -- Percentage for body values
 Config.PoliceNotify = 60 -- Percentage to notify the police
 Config.PoliceJob = 'police' -- Police Job
-Config.minPolice = 4 -- Min police to rob a tomb
+Config.minPolice = 0 -- Min police to rob a tomb
 
 Config.CheckEvidenceCoords = vec3(446.7606, -974.2661, 30.4386) -- Coords for target to check Evidence
 

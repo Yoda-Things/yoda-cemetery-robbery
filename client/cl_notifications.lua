@@ -64,3 +64,11 @@ RegisterNetEvent('yoda-cemeteryrob:robStarted', function()
     end
 end)
 
+RegisterNetEvent('yoda-cemeteryrob:notEnoughPolice', function()
+    if NOTIFY == 'OX' then
+        exports.ox_lib:notify({description = _t('notifys.notEnoughPolice'),type = 'error'})
+    else
+        QBCore.Functions.Notify(_t('notifys.notEnoughPolice'), 'error', 5000)
+    end
+end)
+

@@ -24,3 +24,10 @@ client_scripts {
 files {
     'locales/**',
 }
+
+escrow_ignore {
+    'shared/**',
+    'server/**',
+    'client/**',
+    'locales/**',
+}

@@ -80,9 +80,13 @@ end
 RegisterNetEvent('yoda-cemeteryrob:createPoliceTarget', function()
     if evidenceTargets['analyzeEvidence'] then
         if TARGET == 'OX' then
-            exports.ox_target:removeZone(evidenceTargets['analyzeEvidence'])
+            if evidenceTargets['analyzeEvidence'] then
+                exports.ox_target:removeZone(evidenceTargets['analyzeEvidence'])
+            end
         else
-            exports['qb-target']:RemoveZone(evidenceTargets['analyzeEvidence'])
+            if evidenceTargets['analyzeEvidence'] then
+                exports['qb-target']:RemoveZone(evidenceTargets['analyzeEvidence'])
+            end
         end
     end
 
@@ -125,12 +129,14 @@ end)
 
 RegisterNetEvent('yoda-cemeteryrob:locInfosGenerated')
 AddEventHandler('yoda-cemeteryrob:locInfosGenerated', function(graves)
+    locInfos = true
     if Config.typeOfRobbery == 'target' then
-        TriggerServerEvent('yoda-cemeteryrob:checkPolice', graves)
+        TriggerServerEvent('yoda-cemeteryrob:checkPoliceTarget', graves)
     end
 end)
 
 RegisterNetEvent('yoda-cemeteryrob:startRob', function (count, graves)
+    print('rob event')
     local ped = PlayerPedId()
     local pos = GetEntityCoords(ped, false)
     local n = 0
@@ -146,6 +152,7 @@ RegisterNetEvent('yoda-cemeteryrob:startRob', function (count, graves)
                 if Config.typeOfRobbery == 'item' then
                     local dist = #(loc.xy - pos.xy)
                     if dist < 1 then
+                        print(dist)
                         if not locInfos then
                             TriggerServerEvent('yoda-cemeteryrob:randomLocInfos')
                         else
@@ -229,6 +236,11 @@ RegisterNetEvent('yoda-cemeteryrob:startDigging', function (index, loc, bodyinfo
     RequestModel(shovelModel)
     while not HasModelLoaded(shovelModel) do
         Wait(0)
+    end
+
+    if not HasModelLoaded(shovelModel) then
+        print("Model not loaded.")
+        return
     end
 
     local function removeTargetAndBlip(index)
@@ -474,4 +486,8 @@ RegisterNetEvent('yoda-cemeteryrob:removeTargetAndPed', function(source, assaila
     end
 
     DeleteEntity(ped)
+end)
+
+RegisterNetEvent('yoda-cemeteryrob:checkPolice', function()
+    TriggerServerEvent('yoda-cemeteryrob:checkPoliceServer')
 end)
