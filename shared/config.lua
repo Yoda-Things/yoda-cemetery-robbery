@@ -6,6 +6,7 @@ Config.Framework = 'QB' -- ESX OR QB
 Config.Target = 'QB' -- OX OR QB
 Config.Notify = 'OX' -- OX OR QB
 Config.Inventory = 'OX' -- OX OR QB
+Config.dispatch = 'PS' -- PS OR ORIGEN
 
 Config.typeOfRobbery = 'target'-- target or item 
 

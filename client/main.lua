@@ -369,17 +369,27 @@ RegisterNetEvent('yoda-cemeteryrob:notifyPolice', function(loc)
     local percentage = Config.PoliceNotify * 0.01
     local chance = math.random()
     if chance <= percentage then
-        exports["ps-dispatch"]:CustomAlert({
-            coords = vector3(loc.x, loc.y, loc.z),
-            message = "Criminal Activity - Camp Robbery",
-            dispatchCode = "10-4 Camp Robbery",
-            description = "Camp Robbery",
-            radius = 0,
-            sprite = 64,
-            color = 2,
-            scale = 1.0,
-            length = 3,
-        })
+        if Config.dispatch == 'PS' then
+            exports["ps-dispatch"]:CustomAlert({
+                coords = vector3(loc.x, loc.y, loc.z),
+                message = "Criminal Activity - Tomb Robbery",
+                dispatchCode = "10-4 Tomb Robbery",
+                description = "Tomb Robbery",
+                radius = 0,
+                sprite = 64,
+                color = 2,
+                scale = 1.0,
+                length = 3,
+            })
+        elseif Config.dispatch == 'ORIGEN' then
+            exports['origen_police']:SendAlert({
+                coords = vector3(loc.x, loc.y, loc.z),
+                title = 'Tomb Robbery',
+                type = 'GENERAL',
+                message = 'Criminal Activity - Tomb Robbery',
+                job = Config.PoliceJob,
+            })
+        end
     end
 end)
 
