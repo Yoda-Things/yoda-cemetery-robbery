@@ -1,3 +1,5 @@
+-- main.lua
+
 local TARGET = Config.Target
 local locInfos = false
 local inRob = false
@@ -129,6 +131,7 @@ end)
 
 RegisterNetEvent('yoda-cemeteryrob:locInfosGenerated')
 AddEventHandler('yoda-cemeteryrob:locInfosGenerated', function(graves)
+    gravesBackup = graves
     locInfos = true
     if Config.typeOfRobbery == 'target' then
         TriggerServerEvent('yoda-cemeteryrob:checkPoliceTarget', graves)
@@ -140,24 +143,28 @@ RegisterNetEvent('yoda-cemeteryrob:startRob', function (count, graves)
     local ped = PlayerPedId()
     local pos = GetEntityCoords(ped, false)
     local n = 0
+    count = tonumber(count) or 0
+    print('Count recebido (numérico):', count)
 
     if count >= Config.minPolice then
         if inRob then
             TriggerEvent('yoda-cemeteryrob:robStarted')
         else
-            for _, grave in pairs(graves) do
+            for _, grave in pairs(gravesBackup) do
                 n = n + 1
                 local loc = grave.loc
-                
+                print("Grave loc:", loc)
+
                 if Config.typeOfRobbery == 'item' then
                     local dist = #(loc.xy - pos.xy)
                     if dist < 1 then
-                        print(dist)
+                        print("Distância até o túmulo:", dist)
                         if not locInfos then
                             TriggerServerEvent('yoda-cemeteryrob:randomLocInfos')
                         else
                             inRob = true
-                            TriggerServerEvent('yoda-cemeteryrob:searchLocInfo', loc)
+                            -- Passando 'n' como index
+                            TriggerServerEvent('yoda-cemeteryrob:searchLocInfo', n, loc) 
                             break
                         end
                     end
@@ -167,8 +174,9 @@ RegisterNetEvent('yoda-cemeteryrob:startRob', function (count, graves)
     else
         TriggerEvent('yoda-cemeteryrob:notEnoughPolice')
     end
+
     if Config.typeOfRobbery == 'target' then
-        for _, grave in pairs(graves) do
+        for _, grave in pairs(gravesBackup) do
             n = n + 1
             local loc = grave.loc
             if TARGET == 'OX' then
@@ -183,7 +191,7 @@ RegisterNetEvent('yoda-cemeteryrob:startRob', function (count, graves)
                             if count >= Config.minPolice then
                                 if not isInteracting[n] then
                                     inRob = true
-                                    TriggerServerEvent('yoda-cemeteryrob:searchLocInfo', n, loc)
+                                    TriggerServerEvent('yoda-cemeteryrob:searchLocInfo', n, loc) -- Passando 'n' como index
                                 end
                             else
                                 TriggerEvent('yoda-cemeteryrob:notEnoughPolice')
@@ -205,7 +213,7 @@ RegisterNetEvent('yoda-cemeteryrob:startRob', function (count, graves)
                                 if count >= Config.minPolice then
                                     if not isInteracting[n] then
                                         inRob = true
-                                        TriggerServerEvent('yoda-cemeteryrob:searchLocInfo', n, loc)
+                                        TriggerServerEvent('yoda-cemeteryrob:searchLocInfo', n, loc) -- Passando 'n' como index
                                     end
                                 else
                                     TriggerEvent('yoda-cemeteryrob:notEnoughPolice')
@@ -239,7 +247,7 @@ RegisterNetEvent('yoda-cemeteryrob:startDigging', function (index, loc, bodyinfo
     end
 
     if not HasModelLoaded(shovelModel) then
-        print("Model not loaded.")
+        print("Modelo da pá não carregado.")
         return
     end
 

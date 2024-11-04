@@ -3,12 +3,12 @@ Config = {}
 Config.Locale = 'en'
 Config.Framework = 'QB' -- ESX OR QB
 
-Config.Target = 'QB' -- OX OR QB
-Config.Notify = 'OX' -- OX OR QB
+Config.Target = 'OX' -- OX OR QB
+Config.Notify = 'QB' -- OX OR QB
 Config.Inventory = 'OX' -- OX OR QB
 Config.dispatch = 'PS' -- PS OR ORIGEN
 
-Config.typeOfRobbery = 'item'-- target or item 
+Config.typeOfRobbery = 'target'-- target or item 
 
 Config.Camp = 70 -- Percentage to have a body on the camp
 Config.Values = 70 -- Percentage for body values

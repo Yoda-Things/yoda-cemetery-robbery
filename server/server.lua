@@ -1,3 +1,5 @@
+-- server.lua
+
 local Graves = {}
 GraveRobbers = {}
 
@@ -79,6 +81,12 @@ end)
 
 RegisterNetEvent('yoda-cemeteryrob:searchLocInfo')
 AddEventHandler('yoda-cemeteryrob:searchLocInfo', function(index, loc)
+    if loc == nil then
+        print("Erro: loc é nil na função searchLocInfo.")
+        return
+    end
+
+    print("Procurando informações para o túmulo com index:", index) -- Adiciona uma mensagem para depuração
     for _, grave in pairs(Graves) do
         if grave.loc == loc then
             local bodyinfo = grave.body
@@ -93,7 +101,6 @@ AddEventHandler('yoda-cemeteryrob:searchLocInfo', function(index, loc)
         end
     end
 end)
-
 
 RegisterNetEvent('yoda-cemeteryrob:robResult')
 AddEventHandler('yoda-cemeteryrob:robResult', function (ped, loc, grave)
@@ -309,10 +316,11 @@ AddEventHandler('yoda-cemeteryrob:checkPoliceServer', function()
         end
     end
 
-    if type(count) ~= 'number' then
+    if type(count) ~= 'number' or count == nil then
+        print("Aviso: count era nil ou não numérico, definindo como 0")
         count = 0
     end
 
-    print(count)
+    print("Total de policiais disponíveis:", count)
     TriggerClientEvent('yoda-cemeteryrob:startRob', source, count, Graves)
 end)
