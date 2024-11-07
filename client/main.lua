@@ -296,6 +296,7 @@ RegisterNetEvent('yoda-cemeteryrob:startDigging', function (index, loc, bodyinfo
         TriggerEvent('yoda-cemeteryrob:spawnPed', loc, grave)
     elseif not activeRobs[loc] and not bodyinfo then
         TriggerEvent('yoda-cemeteryrob:noBodysFound')
+        inRob = false
     end
 
     TriggerEvent('yoda-cemeteryrob:notifyPolice', loc)

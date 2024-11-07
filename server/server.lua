@@ -86,21 +86,21 @@ AddEventHandler('yoda-cemeteryrob:searchLocInfo', function(index, loc)
         return
     end
 
-    print("Procurando informações para o túmulo com index:", index) -- Adiciona uma mensagem para depuração
+    print("Procurando informações para o túmulo com index:", index)  -- Log para depuração
     for _, grave in pairs(Graves) do
+        print("Verificando túmulo:", grave.loc, "Estado:", grave.open) -- Log para depuração
         if grave.loc == loc then
-            local bodyinfo = grave.body
-            local open = grave.open
-            if open == false then
+            if grave.open == false then
                 grave.open = true
-                TriggerClientEvent('yoda-cemeteryrob:startDigging', source, index, loc, bodyinfo, grave)
+                TriggerClientEvent('yoda-cemeteryrob:startDigging', source, index, loc, grave.body, grave)
             else
                 TriggerClientEvent('yoda-cemeteryrob:graveOpen', source)
                 return
-            end
+            end            
         end
     end
 end)
+
 
 RegisterNetEvent('yoda-cemeteryrob:robResult')
 AddEventHandler('yoda-cemeteryrob:robResult', function (ped, loc, grave)
